@@ -1,5 +1,5 @@
 // Overall debugging enabled e.g. to log details on Serial
-#define DEBUG true
+#define DEBUG false
 // Should the wifi manager run in blocking mode until wifi connection is established or completely non blocking?
 #define WIFI_MANAGER_NON_BLOCKING true
 
@@ -177,7 +177,7 @@ WiFiManagerParameter custom_mqtt_pass     ("mqtt_pass",      "MQTT pass",      m
  */
 void saveConfigCallback()
 {
-#ifdef DEBUG
+#if DEBUG == true
   Serial.println("Should save config");
 #endif
 
@@ -201,7 +201,7 @@ void saveConfig()
   strcpy(device_id, custom_mqtt_device_id.getValue());
   strcpy(mqtt_user, custom_mqtt_user.getValue());
   strcpy(mqtt_pass, custom_mqtt_pass.getValue());
-#ifdef DEBUG
+#if DEBUG == true
   Serial.println("OTA");
   Serial.println("\tpassword : " + String(otaPassword));
   Serial.println("\tport : " + String(otaPort_buffer));
@@ -216,7 +216,7 @@ void saveConfig()
   // Save the custom parameters to FS
   if (shouldSaveConfig)
   {
-#ifdef DEBUG
+#if DEBUG == true
     Serial.println("saving config");
 #endif
 
@@ -239,18 +239,18 @@ void saveConfig()
     File configFile = LittleFS.open("/config.json", "w");
     if (!configFile)
     {
-#ifdef DEBUG
+#if DEBUG == true
       Serial.println("failed to open config file for writing");
 #endif
     }
 
 #if ARDUINOJSON_VERSION_MAJOR >= 6
-#ifdef DEBUG
+#if DEBUG == true
     serializeJson(json, Serial);
 #endif
     serializeJson(json, configFile);
 #else
-#ifdef DEBUG
+#if DEBUG == true
     json.printTo(Serial);
 #endif
     json.printTo(configFile);
@@ -266,27 +266,27 @@ void prepareFileSystem()
   // LittleFS.format();
 
   // Read configuration from FS json
-#ifdef DEBUG
+#if DEBUG == true
   Serial.println("mounting FS...");
 #endif
 
   if (LittleFS.begin())
   {
-#ifdef DEBUG
+#if DEBUG == true
     Serial.println("mounted file system");
 #endif
 
     if (LittleFS.exists("/config.json"))
     {
       // File exists, reading and loading
-#ifdef DEBUG
+#if DEBUG == true
       Serial.println("reading config file");
 #endif
 
       File configFile = LittleFS.open("/config.json", "r");
       if (configFile)
       {
-#ifdef DEBUG
+#if DEBUG == true
         Serial.println("opened config file");
 #endif
 
@@ -299,7 +299,7 @@ void prepareFileSystem()
 #if ARDUINOJSON_VERSION_MAJOR >= 6
         DynamicJsonDocument json(1024);
         auto deserializeError = deserializeJson(json, buf.get());
-#ifdef DEBUG
+#if DEBUG == true
         serializeJson(json, Serial);
 #endif
         if (!deserializeError)
@@ -307,13 +307,13 @@ void prepareFileSystem()
 #else
         DynamicJsonBuffer jsonBuffer;
         JsonObject &json = jsonBuffer.parseObject(buf.get());
-#ifdef DEBUG
+#if DEBUG == true
         json.printTo(Serial);
 #endif
         if (json.success())
         {
 #endif
-#ifdef DEBUG
+#if DEBUG == true
           Serial.println("\nparsed json");
 #endif
 
@@ -327,7 +327,7 @@ void prepareFileSystem()
           strcpy(mqtt_user, json["mqttUser"]);
           strcpy(mqtt_pass, json["mqttPass"]);
 
-#ifdef DEBUG
+#if DEBUG == true
           Serial.println("OTA");
           Serial.println("\tpassword : " + String(otaPassword));
           Serial.println("\tport : " + String(otaPort));
@@ -341,7 +341,7 @@ void prepareFileSystem()
         }
         else
         {
-#ifdef DEBUG
+#if DEBUG == true
           Serial.println("failed to load json config");
 #endif
         }
@@ -466,7 +466,7 @@ void setWheel(byte WheelPos, float brightness)
 }
 
 void prepareTargetTimer() {
-#ifdef DEBUG
+#if DEBUG == true
   Serial.println("--- prepareTargetTimer ---");
   Serial.print("settings.timer: "); Serial.println(settings.timer);
   Serial.print("settings.flowerGoalState: "); Serial.println(settings.flowerGoalState);
@@ -499,7 +499,7 @@ void updateFlower()
     movementDirection = 0;
     frameElapsed = 0;
 
-#ifdef DEBUG
+#if DEBUG == true
     Serial.println("closed");
 #endif
 
@@ -518,7 +518,7 @@ void updateFlower()
     movementDirection = 0;
     frameElapsed = frameDuration;
 
-#ifdef DEBUG
+#if DEBUG == true
     Serial.println("opened");
 #endif
 
@@ -553,7 +553,7 @@ void updateFlower()
  */
 void mqttCallback(char *topic, byte *payload, unsigned int length)
 {
-#ifdef DEBUG
+#if DEBUG == true
   Serial.print("\nMessage arrived [");
   Serial.print(topic);
   Serial.println("] ");
@@ -570,7 +570,7 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
   message_buff[i] = '\0';
 
   String msgString = String(message_buff);
-#ifdef DEBUG
+#if DEBUG == true
   Serial.println("payload: \"" + msgString + "\"");
 #endif
 
@@ -713,7 +713,7 @@ void setupWifi() {
   wifiManager.setConfigPortalBlocking(false);
 #endif
 
-#ifdef DEBUG
+#if DEBUG == true
   wifiManager.setDebugOutput(true);
 #else
   wifiManager.setDebugOutput(false);
@@ -726,7 +726,7 @@ void setupWifi() {
   if ((shouldStartConfigPortal && !wifiManager.startConfigPortal(HOSTNAME)) || !wifiManager.autoConnect(HOSTNAME))
   {
 #if WIFI_MANAGER_NON_BLOCKING != true
-#ifdef DEBUG
+#if DEBUG == true
     Serial.println("failed to connect and hit timeout");
 #endif
     delay(3000);
@@ -740,7 +740,7 @@ void setupWifi() {
 
   saveConfig();
 
-#ifdef DEBUG
+#if DEBUG == true
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
@@ -758,7 +758,7 @@ void setupOta() {
   // No authentication by default
   ArduinoOTA.setPassword(otaPassword);
 
-#ifdef DEBUG
+#if DEBUG == true
   ArduinoOTA.onStart([]()
                      { Serial.println("Start"); });
   ArduinoOTA.onEnd([]()
@@ -816,7 +816,7 @@ void setupServo() {
 
 void setup()
 {
-#ifdef DEBUG
+#if DEBUG == true
   Serial.begin(115200);
 #endif
 
@@ -836,7 +836,7 @@ void setup()
 
   prepareTargetTimer();
 
-#ifdef DEBUG
+#if DEBUG == true
   Serial.println("--- settings ---");
   Serial.print("servo position: "); Serial.println(settings.servoPosition);
   Serial.print("brightness: "); Serial.println(settings.brightness);
@@ -884,7 +884,7 @@ void loop()
   }
 
   if (shouldStartConfigPortal && !wifiManager.startConfigPortal(HOSTNAME)) {
-#ifdef DEBUG
+#if DEBUG == true
     Serial.println("Config portal started");
 
     shouldStartConfigPortal = false;
@@ -896,7 +896,7 @@ void loop()
     saveConfig();
 
 #if WIFI_MANAGER_NON_BLOCKING == true
-#ifdef DEBUG
+#if DEBUG == true
     Serial.println("restarting system ...");
 #endif
     // Reset and try again, or maybe put it to deep sleep
@@ -931,7 +931,7 @@ void loop()
   {
     int direction = (int) encoder->getDirection();
 
-#ifdef DEBUG
+#if DEBUG == true
     Serial.println("--- rotary encoder ---");
     Serial.print("pos:");
     Serial.print(newPos);
@@ -980,13 +980,13 @@ void loop()
         doColorChange = true;
       }
 
-#ifdef DEBUG
+#if DEBUG == true
       Serial.print("movement direction:");
       Serial.println(movementDirection);
 #endif
     }
 
-#ifdef DEBUG
+#if DEBUG == true
     Serial.println("Push button pushed");
 #endif
   }
@@ -996,7 +996,7 @@ void loop()
 
     // If yes, the nightlight should stop when the timer is over
     if (targetTimer > 0 && millis() > targetTimer) {
-#ifdef DEBUG
+#if DEBUG == true
       Serial.println("--- target timer reached ---");
       Serial.print("targetTimer: "); Serial.println(targetTimer);
       Serial.print("settings.timer * 1000: "); Serial.println((int)(settings.timer * 1000));
@@ -1019,7 +1019,7 @@ void loop()
     rotaryStore = false;
     doColorChange = false;
 
-#ifdef DEBUG
+#if DEBUG == true
     Serial.println("store wheel position");
 #endif
 
