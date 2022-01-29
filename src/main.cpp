@@ -2,6 +2,8 @@
 #define DEBUG false
 // Should the wifi manager run in blocking mode until wifi connection is established or completely non blocking?
 #define WIFI_MANAGER_NON_BLOCKING true
+// Is MQTT client enabled?
+#define MQTT_ENABLED false
 
 // Define which LED library to use in the code
 #define LED_LIB_FASTLED 0x01
@@ -134,11 +136,13 @@ unsigned int mqtt_port = 1883;
 char device_id[32] = "esp8266-nightlamp";
 char mqtt_user[32] = "<USER>";
 char mqtt_pass[32] = "<PWD>";
+#if MQTT_ENABLED == true
 // MQTT topics
 const char *mqtt_topic_brightness = "esp/nightlamp/brightness";
 const char *mqtt_topic_timer = "esp/nightlamp/timer";
 const char *mqtt_topic_color = "esp/nightlamp/color";
 const char *mqtt_topic_toggle = "esp/nightlamp/toggle";
+#endif
 
 char message_buff[100];
 long lastReconnectAttempt = 0;
@@ -152,7 +156,9 @@ bool shouldStartConfigPortal = false;
 WiFiManager wifiManager;
 #endif
 WiFiClient espClient;
+#if MQTT_ENABLED == true
 PubSubClient mqttClient(espClient);
+#endif
 
 
 char otaPort_buffer[5];
@@ -164,7 +170,7 @@ const char *htmlTypePassword = "type=\"password\"";
 // OTA
 WiFiManagerParameter custom_ota_password  ("ota_password",   "OTA password",   otaPassword,      32, htmlTypePassword);
 WiFiManagerParameter custom_ota_port      ("ota_port",       "OTA port",       otaPort_buffer,   5);
-// // MQTT
+// MQTT
 WiFiManagerParameter custom_mqtt_server   ("mqtt_server",    "MQTT server",    mqtt_server,      32);
 WiFiManagerParameter custom_mqtt_port     ("mqtt_port",      "MQTT port",      mqtt_port_buffer, 5);
 WiFiManagerParameter custom_mqtt_device_id("mqtt_device_id", "MQTT device ID", device_id,        32);
@@ -548,6 +554,7 @@ void updateFlower()
   }
 }
 
+#if MQTT_ENABLED == true
 /**
  * MQTT callback handler on incoming publish
  */
@@ -617,7 +624,9 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     storeSettings();
   }
 }
+#endif
 
+#if MQTT_ENABLED == true
 /**
  * MQTT reconnect code (non blocking)
  */
@@ -633,6 +642,7 @@ bool reconnect()
   
   return mqttClient.connected();
 }
+#endif
 
 /*** SETUP ***/
 
@@ -783,10 +793,12 @@ void setupOta() {
   ArduinoOTA.begin();
 }
 
+#if MQTT_ENABLED == true
 void setupMqtt() {
   mqttClient.setServer(mqtt_server, mqtt_port);
   mqttClient.setCallback(mqttCallback);
 }
+#endif
 
 void setupRotaryEncoder() {
   // Setup the rotary encoder functionality
@@ -858,7 +870,9 @@ void setup()
   setupWifi();
 
   /*** Prepare MQTT ***/
+#if MQTT_ENABLED == true
   setupMqtt();
+#endif
   
   /*** OTA ***/
   setupOta();
@@ -910,6 +924,7 @@ void loop()
   MDNS.update();
 #endif
 
+#if MQTT_ENABLED == true
   if (!mqttClient.connected()) {
     long now = millis();
 
@@ -925,6 +940,7 @@ void loop()
     // Client connected
     mqttClient.loop();
   }
+#endif
 
   int newPos = encoder->getPosition();
   if (rotaryPos != newPos)
